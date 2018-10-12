@@ -158,7 +158,7 @@ namespace SoftwareDevelopment1
 
         {
 
-            return this.Name + "\n" + this.Hashcode + "\n" + this.Use + "\n" + base.ToString() + "\n" + "________________";
+            return this.Name + " " + this.Hashcode + " " + this.Use + " " + base.ToString() + " " ;
 
         }
 
@@ -215,7 +215,7 @@ namespace SoftwareDevelopment1
 
         {
 
-            return this.Name + "\n" + this.Val + "\n" + this.Hashcode + "\n" + this.Use + "\n" + base.ToString() + "\n" + "________________";
+            return this.Name + " " + this.Val + " " + this.Hashcode + " " + this.Use + " " + base.ToString() ;
 
         }
 
@@ -257,7 +257,7 @@ namespace SoftwareDevelopment1
 
         {
 
-            return this.Name + "\n" + this.Hashcode + "\n" + this.Use + "\n" + base.ToString() + "\n" + "________________";
+            return this.Name + " " + this.Hashcode + " " + this.Use +  " " + base.ToString();
 
         }
 
@@ -269,7 +269,7 @@ namespace SoftwareDevelopment1
 
         public string use;
 
-        public List<string> list;
+        public Dictionary<string,string> list;
 
 
 
@@ -284,7 +284,7 @@ namespace SoftwareDevelopment1
         }
 
 
-        public List<string> List
+        public Dictionary<string, string> List
 
         {
 
@@ -294,7 +294,7 @@ namespace SoftwareDevelopment1
 
         }
 
-        public METHODS(string name, string type, List<string> l) : base(type, name)
+        public METHODS(string name, string type, Dictionary<string, string> l) : base(type, name)
 
         {
 
@@ -312,7 +312,7 @@ namespace SoftwareDevelopment1
 
         {
 
-            return this.Name + "\n" + this.Hashcode + "\n" + this.Use + "\n" + this.ListString() + "\n" + base.ToString() + "\n" + "________________";
+            return this.Name + " " + this.Hashcode + " " + this.Use + " " + this.ListString() + " " + base.ToString();
 
         }
 
@@ -322,11 +322,11 @@ namespace SoftwareDevelopment1
 
             string line = "";
 
-            foreach (string x in this.List)
+            foreach (KeyValuePair<string,string> x in this.List)
 
             {
 
-                line = line + x + " | ";
+                line = line + x.Key + " "+x.Value+ " | ";
 
             }
 
@@ -339,20 +339,143 @@ namespace SoftwareDevelopment1
     class Program
 
     {
+        static void ForVar(Tree t,string txt)
+        {
+            Regex reg1 = new Regex(@"(int|float|bool|char|string)");
 
+            Match m = reg1.Match(txt);
 
+            txt = reg1.Replace(txt, " ");
+
+            reg1 = new Regex(@"\;");
+
+            txt = reg1.Replace(txt.Trim(' '), " ");
+
+            ID v = new VARS(txt.Trim(' '), m.Value);
+            t.Insert(v);
+        }
+        static void ForClass(Tree t,string txt)
+        {
+            txt = txt.Replace("class", " ");
+
+            txt = txt.Replace(";", " ");
+
+            ID cl = new CLASSES(txt.Trim(' '), "class");
+
+            t.Insert(cl);
+        }
+        static void ForMeth(Tree t,string txt)
+        {
+            Regex reg1 = new Regex(@"(\((((ref|out)[\s]){0,1}(int|float|bool|char|string){1}([\s]){1}([\w]+[\d]*)\,*[\s]*)+\))|(\(\))");
+
+            Match m = reg1.Match(txt);
+
+            txt = reg1.Replace(txt, " ");
+
+            reg1 = new Regex(@"(int|float|bool|char|string)");
+
+            Match m1 = reg1.Match(txt);
+
+            txt = reg1.Replace(txt.Trim(' '), " ");
+
+            reg1 = new Regex(@"\;");
+
+            txt = reg1.Replace(txt.Trim(' '), " ");
+
+            reg1 = new Regex(@",");
+
+            string[] par = reg1.Split(m.Value.Trim(' '));
+
+            reg1 = new Regex(@"[\s]{1}");
+
+            for (int j = 0; j < par.Length; j++)
+
+            {
+
+                par[j] = par[j].Replace(")", " ");
+
+                par[j] = par[j].Replace("(", " ");
+
+                par[j] = par[j].Trim(' ');
+
+                par[j] = reg1.Replace(par[j], "_");
+
+            }
+
+            Dictionary<string, string> par2=new Dictionary<string, string>();
+            for(int k = 0; k < par.Length; k++)
+            {
+                if (par[k].Contains("ref")==true)
+                {
+                    par2.Add(par[k], "param_ref");
+                }
+                else if (par[k].Contains("out") == true)
+                {
+                    par2.Add(par[k], "param_out");
+                }
+                else if (par[k] == "")
+                {
+                    par2.Add(par[k], "");
+                }
+                else
+                {
+                    par2.Add(par[k], "param_val");
+                }
+            }
+
+            reg1 = new Regex(@"(\((((ref|out)[\s]){0,1}(int|float|bool|char|string){1}([\s]){1}([\w]+[\d]*)\,*[\s]*)+\))|(\(\))");
+
+            txt = reg1.Replace(txt, " ");
+
+            ID meth = new METHODS(txt.Trim(' '), m1.Value, par2);
+
+            t.Insert(meth);
+        }
+        static void ForConst(Tree t, string txt)
+        {
+            txt = txt.Trim(' ');
+
+            Regex reg = new Regex(@"(int|float|bool|char|string)");
+
+            Match type = reg.Match(txt);
+
+            txt = reg.Replace(txt, " ");
+
+            reg = new Regex(@"const");
+
+            txt = reg.Replace(txt, " ");
+
+            txt = txt.Replace("=", " ");
+
+            txt = txt.Replace(";", " ");
+
+            reg = new Regex(@"[\w]+[\d]*");
+
+            Match name = reg.Match(txt);
+
+            txt = txt.Replace(name.Value, " ");
+
+            txt = txt.Trim(' ');
+
+            reg = new Regex(@"([\d]+)|([\w]+[\d]*)");
+
+            Match val = reg.Match(txt);
+
+            ID c = new CONSTS(name.Value, val.Value, type.Value);
+
+            t.Insert(c);
+        }
 
         static void Main(string[] args)
 
         {
-
-            Regex formeth = new Regex(@"[\s|\w]*\([\s|\w|\,]+\)\;");
+            Regex formeth = new Regex(@"[\s|\w]*((\([\s|\w|\,]+\))|(\(\)))\;");
 
             Regex forclass = new Regex(@"class[\s]{1}[\w]+[\d]*\;");
 
             Regex forvar = new Regex(@"(int|float|bool|char|string)[\s]{1}[\w]+[\d]*\;");
 
-            Regex forconst = new Regex(@"const[\s](int|float|bool|char|string)[\s][\w]+[\d]*[\s]*\=[\s]*(([\d]+)|([\w]+[\d]*))\;");
+            Regex forconst = new Regex(@"const[\s](int|float|bool|char|string)[\s][\w]+[\d]*[\s]*\=[\s]*\-*\'*(([\d]+(\.[\d]+)*)|([\w]+[\d]*))\'*\;");
 
             FileStream f = new FileStream("input.txt", FileMode.OpenOrCreate);
 
@@ -387,18 +510,7 @@ namespace SoftwareDevelopment1
 
                 {
 
-                    Regex reg1 = new Regex(@"(int|float|bool|char|string)");
-
-                    Match m = reg1.Match(txt);
-
-                    txt = reg1.Replace(txt, " ");
-
-                    reg1 = new Regex(@"\;");
-
-                    txt = reg1.Replace(txt.Trim(' '), " ");
-
-                    ID v = new VARS(txt.Trim(' '), m.Value);
-                    t.Insert(v);
+                    ForVar(t, txt);
 
                 }
 
@@ -406,13 +518,7 @@ namespace SoftwareDevelopment1
 
                 {
 
-                    txt = txt.Replace("class", " ");
-
-                    txt = txt.Replace(";", " ");
-
-                    ID cl = new CLASSES(txt.Trim(' '), "class");
-
-                    t.Insert(cl);
+                    ForClass(t,txt);
 
                 }
 
@@ -420,51 +526,7 @@ namespace SoftwareDevelopment1
 
                 {
 
-                    Regex reg1 = new Regex(@"\((((ref|out)[\s]){0,1}(int|float|bool|char|string){1}([\s]){1}([\w]+[\d]*)\,*[\s]*)+\)");
-
-                    Match m = reg1.Match(txt);
-
-                    txt = reg1.Replace(txt, " ");
-
-                    reg1 = new Regex(@"(int|float|bool|char|string)");
-
-                    Match m1 = reg1.Match(txt);
-
-                    txt = reg1.Replace(txt.Trim(' '), " ");
-
-                    reg1 = new Regex(@"\;");
-
-                    txt = reg1.Replace(txt.Trim(' '), " ");
-
-                    reg1 = new Regex(@",");
-
-                    string[] par = reg1.Split(m.Value.Trim(' '));
-
-                    reg1 = new Regex(@"[\s]{1}");
-
-                    for (int j = 0; j < par.Length; j++)
-
-                    {
-
-                        par[j] = par[j].Replace(")", " ");
-
-                        par[j] = par[j].Replace("(", " ");
-
-                        par[j] = par[j].Trim(' ');
-
-                        par[j] = reg1.Replace(par[j], "_");
-
-                    }
-
-                    List<string> par2 = par.ToList();
-
-                    reg1 = new Regex(@"\((((ref|out)[\s]){0,1}(int|float|bool|char|string){1}([\s]){1}([\w]+[\d]*)\,*[\s]*)+\)");
-
-                    txt = reg1.Replace(txt, " ");
-
-                    ID meth = new METHODS(txt.Trim(' '), m1.Value, par2);
-
-                    t.Insert(meth);
+                    ForMeth( t, txt);
 
                 }
 
@@ -472,37 +534,7 @@ namespace SoftwareDevelopment1
 
                 {
 
-                    txt = txt.Trim(' ');
-
-                    Regex reg = new Regex(@"(int|float|bool|char|string)");
-
-                    Match type = reg.Match(txt);
-
-                    txt = reg.Replace(txt, " ");
-
-                    reg = new Regex(@"const");
-
-                    txt = reg.Replace(txt, " ");
-
-                    txt = txt.Replace("=", " ");
-
-                    txt = txt.Replace(";", " ");
-
-                    reg = new Regex(@"[\w]+[\d]*");
-
-                    Match name = reg.Match(txt);
-
-                    txt = txt.Replace(name.Value, " ");
-
-                    txt = txt.Trim(' ');
-
-                    reg = new Regex(@"([\d]+)|([\w]+[\d]*)");
-
-                    Match val = reg.Match(txt);
-
-                    ID c = new CONSTS(name.Value, val.Value, type.Value);
-
-                    t.Insert(c);
+                    ForConst(t, txt);
 
                 }
 
@@ -511,7 +543,6 @@ namespace SoftwareDevelopment1
             r1.Close();
             f1.Close();
             Console.ReadKey();
-
         }
 
     }
